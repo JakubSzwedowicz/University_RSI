@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+option csharp_namespace = "GrpcGreeter";
+
+package greet;
+
+// The greeting service definition.
+service Greeter {
+  // Sends a greeting
+  rpc SayHello (HelloRequest) returns (HelloReply);
+  rpc CalculateDistance1P (Distance1PRequest) returns (DistanceReply);
+  rpc CalculateDistance2P (Distance2PRequest) returns (DistanceReply);
+  rpc CalculateDistance3P (Distance3PRequest) returns (DistanceReply);
+}
+
+// The request message containing the user's name.
+message HelloRequest {
+  string name = 1;
+}
+
+// The response message containing the greetings.
+message HelloReply {
+  string message = 1;
+}
+
+message Distance1PRequest {
+	string cityName = 1;
+	double latitude = 2;
+	double longitude = 3;
+}
+
+message Distance2PRequest {
+	string cityName1 = 1;
+	double latitude1 = 2;
+	double longitude1 = 3;
+	
+	string cityName2 = 4;
+	double latitude2  = 5;
+	double longitude2 = 6;
+}
+
+message Distance3PRequest {
+	string cityName1 = 1;
+	double latitude1 = 2;
+	double longitude1 = 3;
+	
+	string cityName2 = 4;
+	double latitude2 = 5;
+	double longitude2 = 6;
+
+	string cityName3 = 7;
+	double latitude3 = 8;
+	double longitude3 = 9;
+}
+
+message DistanceReply {
+	bool success = 1;
+	double distance = 2;
+}
