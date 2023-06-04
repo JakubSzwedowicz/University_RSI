@@ -18,7 +18,7 @@ namespace ServerApp
             //string exchangeName = "hello_exchange";
             string exchangeName = string.Empty;
             string queueName = "hello_queue";
-            Uri uri = new Uri("amqp://producer:producer@localhost:5672");
+            Uri uri = new Uri("amqp://producer:producer@192.168.1.102:5672");
 
             Publisher publisher = new Publisher("Publisher1", exchangeName, queueName, uri);
 
