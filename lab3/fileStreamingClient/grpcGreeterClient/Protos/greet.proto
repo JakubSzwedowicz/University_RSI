@@ -1,0 +1,51 @@
+syntax = "proto3";
+import "google/protobuf/empty.proto";
+
+option csharp_namespace = "GrpcFileStreamingClient";
+
+package FileStreaming;
+
+// The greeting service definition.
+service FileStreaming {
+	rpc SayHello(HelloRequest) returns (HelloResponse);
+	rpc SendFileToServer(stream FileUploadRequest) returns (FileUploadResponse);
+	rpc ReceiveFileFromServer (google.protobuf.Empty) returns (stream FileUploadRequest);
+}
+
+message HelloRequest {
+	string callerName = 1;
+}
+
+message HelloResponse {
+	string message = 1;
+}
+
+message MetaData {
+	string name = 1;
+	string type = 2;
+}
+
+message FileData {
+	bytes byteArray = 1;
+}
+
+enum Status {
+	PENDING = 0;
+	IN_PROGRESS = 1;
+	SUCCESS = 2;
+	FAILED = 3;
+}
+
+message FileUploadRequest {
+	oneof request
+	{
+		MetaData metadata = 1;
+		FileData fileData = 2;
+	}
+}
+
+message FileUploadResponse {
+	string name = 1;
+	Status status = 2;
+}
+
