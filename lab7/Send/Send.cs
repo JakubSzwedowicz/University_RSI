@@ -6,6 +6,7 @@ using System;
 using System.Text;
 using System.Threading.Channels;
 using System.Net;
+using Receive;
 
 namespace ServerApp
 {
@@ -18,7 +19,7 @@ namespace ServerApp
             //string exchangeName = "hello_exchange";
             string exchangeName = string.Empty;
             string queueName = "hello_queue";
-            Uri uri = new Uri("amqp://producer:producer@192.168.1.102:5672");
+            Uri uri = new Uri("amqp://producer:producer@localhost:5672");
 
             Publisher publisher = new Publisher("Publisher1", exchangeName, queueName, uri);
 
@@ -26,8 +27,8 @@ namespace ServerApp
 
             for (int i = 0; i < max; i++)
             {
-                string message = "Hello " + i + "!";
-                publisher.PublishMessageWithName(message);
+                Message msg = new Message(DateTime.Now, "Publisher1 hello", i);
+                publisher.PublishMessage(msg);
                 Thread.Sleep(rand.Next(1000, 3000));
             }
             Console.WriteLine("Program finished...");
@@ -76,6 +77,13 @@ namespace ServerApp
             var body = Encoding.UTF8.GetBytes(_publisherName + " - " + message);
             _channel.BasicPublish(exchange: _exchangeName, routingKey: _queueName, basicProperties: null, body: body);
             Console.WriteLine(_publisherName + " - " + "publishing message: {0}", message);
+        }
+
+        public void PublishMessage(Message msg)
+        {
+            byte[] body = Message.MessageToByteArray(msg);
+            _channel.BasicPublish(exchange: _exchangeName, routingKey: _queueName, basicProperties: null, body: body);
+            Console.WriteLine(_publisherName + " - " + "publishing message: {0}", msg.ToString());
         }
     }
 

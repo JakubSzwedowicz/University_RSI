@@ -19,7 +19,7 @@ namespace ClientApp
             //string exchangeName = "hello_exchange";
             string exchangeName = string.Empty;
             string queueName = "hello_queue";
-            Uri uri = new Uri("amqp://consumer:consumer@192.168.1.102:5672");
+            Uri uri = new Uri("amqp://consumer:consumer@localhost:5672");
 
             Consumer consumer = new Consumer(exchangeName, queueName, uri);
             consumer.StartConsuming();
