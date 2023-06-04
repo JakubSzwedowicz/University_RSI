@@ -15,63 +15,66 @@ namespace ServerApp
         {
             MyData.Info();
             int max = 10;
-            string exchangeName = "my_exchange";
-            string routingKey = "my_routing_key";
-            string connectionString = "amqp://guest:guest@localhost:5672";
+            //string exchangeName = "hello_exchange";
+            string exchangeName = string.Empty;
+            string queueName = "hello_queue";
+            Uri uri = new Uri("amqp://producer:producer@localhost:5672");
 
-            Publisher publisher1 = new Publisher("Publisher1", exchangeName, routingKey, connectionString);
-            Publisher publisher2 = new Publisher("Publisher2", exchangeName, routingKey, connectionString);
+            Publisher publisher = new Publisher("Publisher1", exchangeName, queueName, uri);
 
-            var publishers = new List<Publisher>() { publisher1, publisher2 };
             var rand = new Random();
-            for (int counter = 0; counter < max; counter++)
+
+            for (int i = 0; i < max; i++)
             {
-                foreach (Publisher publisher in publishers)
-                {
-                    string message = "Hello " + counter + "!";
-                    publisher.PublishMessageWithName(message);
-                    Thread.Sleep(rand.Next(1000, 3000));
-                }
+                string message = "Hello " + i + "!";
+                publisher.PublishMessageWithName(message);
+                Thread.Sleep(rand.Next(1000, 3000));
             }
+            Console.WriteLine("Program finished...");
+            Console.ReadLine();
         }
     }
     internal class Publisher
     {
         private readonly string _publisherName;
         private readonly string _exchangeName;
-        private readonly string _routingKey;
-        private readonly string _connectionString;
+        private readonly string _queueName;
+        private readonly Uri _uri;
         private readonly ConnectionFactory _factory;
         private readonly IConnection _connection;
         private readonly IModel _channel;
 
-        public Publisher(string publisherName, string exchangeName, string routingKey, string connectionString)
+        public Publisher(string publisherName, string exchangeName, string queueName, Uri uri)
         {
             _publisherName = publisherName;
             _exchangeName = exchangeName;
-            _routingKey = routingKey;
-            _connectionString = connectionString;
+            _queueName = queueName;
+            _uri = uri;
             _factory = new ConnectionFactory
             {
-                HostName = "localhost"
+                Uri = _uri,
+                VirtualHost = "/"
             };
             _connection = _factory.CreateConnection();
             _channel = _connection.CreateModel();
-            _channel.ExchangeDeclare(exchange: _exchangeName, type: ExchangeType.Direct);
-
+            _channel.QueueDeclare(queue: _queueName,
+                durable: false,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null);
         }
 
         public void PublishMessage(string message)
         {
             var body = Encoding.UTF8.GetBytes(message);
-            _channel.BasicPublish(exchange: _exchangeName, routingKey: string.Empty, basicProperties: null, body: body);
+            _channel.BasicPublish(exchange: _exchangeName, routingKey: _queueName, basicProperties: null, body: body);
             Console.WriteLine("publishing message: {0}", message);
         }
 
         public void PublishMessageWithName(string message)
         {
             var body = Encoding.UTF8.GetBytes(_publisherName + " - " + message);
-            _channel.BasicPublish(exchange: _exchangeName, routingKey: string.Empty, basicProperties: null, body: body);
+            _channel.BasicPublish(exchange: _exchangeName, routingKey: _queueName, basicProperties: null, body: body);
             Console.WriteLine(_publisherName + " - " + "publishing message: {0}", message);
         }
     }

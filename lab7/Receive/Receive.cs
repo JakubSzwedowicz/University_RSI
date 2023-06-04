@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
@@ -16,12 +15,12 @@ namespace ClientApp
         static void Main()
         {
             MyData.Info();
-            string exchangeName = "my_exchange";
-            string queueName = "my_queue";
-            string routingKey = "my_routing_key";
-            string connectionString = "amqp://guest:guest@localhost:5672";
+            //string exchangeName = "hello_exchange";
+            string exchangeName = string.Empty;
+            string queueName = "hello_queue";
+            Uri uri = new Uri("amqp://consumer:consumer@localhost:5672");
 
-            Consumer consumer = new Consumer(exchangeName, queueName, routingKey, connectionString);
+            Consumer consumer = new Consumer(exchangeName, queueName, uri);
             consumer.StartConsuming();
 
             Console.WriteLine("Press any key to exit...");
@@ -33,29 +32,31 @@ namespace ClientApp
     {
         private readonly string _exchangeName;
         private readonly string _queueName;
-        private readonly string _routingKey;
-        private readonly string _connectionString;
+        private readonly Uri _uri;
         private readonly ConnectionFactory _factory;
         private readonly IConnection _connection;
         private readonly IModel _channel;
         private readonly EventingBasicConsumer _consumer;
 
-        public Consumer(string exchangeName, string queueName, string routingKey, string connectionString)
+        public Consumer(string exchangeName, string queueName, Uri uri)
         {
             _exchangeName = exchangeName;
             _queueName = queueName;
-            _routingKey = routingKey;
-            _connectionString = connectionString;
+            _uri = uri;
             _factory = new ConnectionFactory
             {
-                HostName = "localhost"
+                Uri = _uri,
+                VirtualHost = "/"
             };
 
             _connection = _factory.CreateConnection();
             _channel = _connection.CreateModel();
-            _channel.ExchangeDeclare(exchange: _exchangeName, type: ExchangeType.Direct);
-            _queueName = _channel.QueueDeclare().QueueName;
-            _channel.QueueBind(queue: _queueName, exchange: exchangeName, routingKey: string.Empty);
+            _channel.QueueDeclare(queue: _queueName,
+                durable: false,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null);
+
             _consumer = new EventingBasicConsumer(_channel);
             _consumer.Received += (model, args) =>
             {
@@ -68,11 +69,20 @@ namespace ClientApp
 
         public void StartConsuming()
         {
-            _channel.BasicConsume(queue: _queueName, autoAck: true, consumer: _consumer);
+            bool running = true;
+            _channel.BasicConsume(queue: _queueName,
+                autoAck: true,
+                consumer: _consumer);
 
             Console.WriteLine("Consumer started. Waiting for messages...");
-            Console.WriteLine("Press any key to exit...");
-            Console.ReadKey();
+            Console.WriteLine("Enter 'exit' to close the program...");
+            while (running)
+            {
+                if (Console.ReadLine() == "exit")
+                {
+                    running = false;
+                }
+            }
         }
     }
 
